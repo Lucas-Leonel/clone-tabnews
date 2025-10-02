@@ -1,6 +1,6 @@
 function Home() {
     return <h1>
-        Mensagem impactante :0
+        Ola mundo
     </h1>
 }
 export default Home;
