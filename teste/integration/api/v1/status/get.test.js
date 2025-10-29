@@ -6,22 +6,23 @@ test("GET to /api/v1/status should return 200", async () => {
 
   // Teste validando que a data existe e está no formato ISO
   const responseBody = await response.json();
+  console.log(responseBody);
   expect(responseBody.updated_at).toBeDefined();
 
   const parsedUpdateAt = new Date(responseBody.updated_at).toISOString();
   expect(responseBody.updated_at).toEqual(parsedUpdateAt);
 
   //Validando versão do Postgres
-  const versionPostgres = responseBody.version;
-  expect(versionPostgres).toEqual("PostgreSQL 16.0 on x86_64-pc-linux-musl");
+  const versionPostgres = responseBody.dependencies.version;
+  expect(versionPostgres).toEqual("16.0");
   expect(versionPostgres).not.toBeNull();
 
   //Validando quantidade maxima de conexões ao banco
-  const maxconnections = responseBody.maxconnections;
-  expect(maxconnections).toEqual("100");
+  const maxconnections = responseBody.dependencies.max_connections;
+  expect(maxconnections).toEqual(100);
   expect(maxconnections).not.toBeNull;
 
   //Valida conexão existente
-  expect(responseBody.activeConnections).toBeDefined();
-  expect(Number(responseBody.activeConnections)).toBeGreaterThan(0);
+  expect(responseBody.dependencies.active_connections).toBeDefined();
+  expect(responseBody.dependencies.active_connections).toEqual(1);
 });
