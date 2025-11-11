@@ -6,7 +6,6 @@ test("GET to /api/v1/status should return 200", async () => {
 
   // Teste validando que a data existe e está no formato ISO
   const responseBody = await response.json();
-  console.log(responseBody);
   expect(responseBody.updated_at).toBeDefined();
 
   const parsedUpdateAt = new Date(responseBody.updated_at).toISOString();
