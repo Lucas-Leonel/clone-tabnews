@@ -23,7 +23,7 @@ test("GET to /api/v1/status should return 200", async () => {
   //Validando quantidade maxima de conexões ao banco
   const maxconnections = responseBody.dependencies.max_connections;
   expect(maxconnections).toEqual(100);
-  expect(maxconnections).not.toBeNull;
+  expect(maxconnections).not.toBeNull();
 
   //Valida conexão existente
   expect(responseBody.dependencies.active_connections).toBeDefined();
