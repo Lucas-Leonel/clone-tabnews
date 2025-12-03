@@ -1,5 +1,3 @@
-// pages/index.js ou components/UnderConstruction.js
-
 import Head from "next/head";
 
 const UnderConstruction = () => {
@@ -66,10 +64,9 @@ const UnderConstruction = () => {
         body {
           margin: 0;
           padding: 0;
-          font-family:
-            -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-            Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue",
-            sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans",
+            "Helvetica Neue", sans-serif;
           background-color: #f4f7f9; /* Cor de fundo suave */
           color: #333;
           height: 100vh;
