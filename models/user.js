@@ -1,5 +1,6 @@
 import { ValidationError, NotFoundError } from "infra/errors.js";
 import database from "infra/database";
+import password from "models/password.js";
 
 async function findOneByUsername(username) {
   const userFound = await runSelectQuery(username);
@@ -32,13 +33,14 @@ async function findOneByUsername(username) {
 }
 
 async function create(userInputValues) {
-  await validateUniqueEmail(userInputValues.email);
-  await validateUniqueUsername(userInputValues.username);
   await validateNotNull(
     userInputValues.username,
     userInputValues.email,
     userInputValues.password,
   );
+  await validateUniqueEmail(userInputValues.email);
+  await validateUniqueUsername(userInputValues.username);
+  await hashPasswordInObject(userInputValues);
 
   const newUser = await runInsertQuery(userInputValues);
   return newUser;
@@ -94,6 +96,11 @@ async function create(userInputValues) {
         action: "Preencha os campos.",
       });
     }
+  }
+
+  async function hashPasswordInObject(userInputValues) {
+    const hashePassword = await password.hash(userInputValues.password);
+    userInputValues.password = hashePassword;
   }
 }
 
