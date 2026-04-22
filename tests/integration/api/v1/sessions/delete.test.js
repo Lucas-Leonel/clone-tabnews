@@ -1,8 +1,6 @@
 import orchestrator from "tests/orchestrator.js";
-import { version as uuidVersion } from "uuid";
 import session from "models/session";
 import setCookieParser from "set-cookie-parser";
-import { user } from "pg/lib/defaults";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
