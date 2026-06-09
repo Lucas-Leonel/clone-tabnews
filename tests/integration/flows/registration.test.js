@@ -1,3 +1,5 @@
+import webserver from "infra/webserver";
+import activation from "models/activation";
 import orchestrator from "tests/orchestrator";
 
 beforeAll(async () => {
@@ -8,6 +10,8 @@ beforeAll(async () => {
 });
 
 describe("Use case: Registration flow (All successful)", () => {
+  let createUserResponseBody;
+
   test("Create user account", async () => {
     const createUserResponse = await fetch(
       "http://localhost:3000/api/v1/users",
@@ -26,7 +30,7 @@ describe("Use case: Registration flow (All successful)", () => {
 
     expect(createUserResponse.status).toBe(201);
 
-    const createUserResponseBody = await createUserResponse.json();
+    createUserResponseBody = await createUserResponse.json();
 
     expect(createUserResponseBody).toEqual({
       id: createUserResponseBody.id,
@@ -46,7 +50,19 @@ describe("Use case: Registration flow (All successful)", () => {
     expect(lastEmail.subject).toBe("Ative seu cadastro no Fintab!");
     expect(lastEmail.text).toContain("RegistrationFlow");
 
-    console.log("Email content:", lastEmail.text);
+    const activationTokenId = orchestrator.extractUUID(lastEmail.text);
+
+    expect(lastEmail.text).toContain(
+      `${webserver.origin}/cadastro/ativar/${activationTokenId}`,
+    );
+
+    const activationTokenObject =
+      await activation.findOneValidById(activationTokenId);
+
+    console.log(activationTokenObject);
+
+    expect(activationTokenObject.user_id).toBe(createUserResponseBody.id);
+    expect(activationTokenObject.used_at).toBe(null);
   });
 
   test("Activate account", async () => {});

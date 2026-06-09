@@ -1,8 +1,43 @@
 import email from "infra/email";
 import database from "infra/database";
 import webserver from "infra/webserver";
+import { NotFoundError } from "infra/errors";
 
 const EXPIRATION_TIME_IN_MILLISECONDS = 60 * 15 * 1000; // 24 hours
+
+async function findOneValidById(tokenId) {
+  const activationTokenObject = await runSelectQuery(tokenId);
+
+  return activationTokenObject;
+
+  async function runSelectQuery(tokenId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          *
+        FROM
+          user_activation_tokens
+        WHERE
+          id = $1
+          AND expires_at > NOW()
+          AND used_at IS NULL
+        LIMIT
+          1
+      ;`,
+      values: [tokenId],
+    });
+
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message:
+          "O token de ativação utilizado não foi encontrato no sistema ou expirou.",
+        action: "Faça um novo cadastro.",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
 
 async function create(userId) {
   const expiresAt = new Date(Date.now() + EXPIRATION_TIME_IN_MILLISECONDS);
@@ -44,6 +79,7 @@ Equipe Fintab
 const activation = {
   sendEmailToUser,
   create,
+  findOneValidById,
 };
 
 export default activation;
