@@ -1,6 +1,7 @@
 import webserver from "infra/webserver";
 import activation from "models/activation";
 import orchestrator from "tests/orchestrator";
+import user from "models/user.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -11,6 +12,7 @@ beforeAll(async () => {
 
 describe("Use case: Registration flow (All successful)", () => {
   let createUserResponseBody;
+  let activationTokenId;
 
   test("Create user account", async () => {
     const createUserResponse = await fetch(
@@ -50,7 +52,7 @@ describe("Use case: Registration flow (All successful)", () => {
     expect(lastEmail.subject).toBe("Ative seu cadastro no Fintab!");
     expect(lastEmail.text).toContain("RegistrationFlow");
 
-    const activationTokenId = orchestrator.extractUUID(lastEmail.text);
+    activationTokenId = orchestrator.extractUUID(lastEmail.text);
 
     expect(lastEmail.text).toContain(
       `${webserver.origin}/cadastro/ativar/${activationTokenId}`,
@@ -59,13 +61,27 @@ describe("Use case: Registration flow (All successful)", () => {
     const activationTokenObject =
       await activation.findOneValidById(activationTokenId);
 
-    console.log(activationTokenObject);
-
     expect(activationTokenObject.user_id).toBe(createUserResponseBody.id);
     expect(activationTokenObject.used_at).toBe(null);
   });
 
-  test("Activate account", async () => {});
+  test("Activate account", async () => {
+    const activateResponse = await fetch(
+      `http://localhost:3000/api/v1/activation/${activationTokenId}`,
+      {
+        method: "PATCH",
+      },
+    );
+
+    expect(activateResponse.status).toBe(200);
+
+    const activateResponseBody = await activateResponse.json();
+
+    expect(Date.parse(activateResponseBody.used_at)).not.toBeNaN();
+
+    const activatedUser = await user.findOneByUsername("RegistrationFlow");
+    expect(activatedUser.features).toEqual(["create:session"]);
+  });
 
   test("Login", async () => {});
 
