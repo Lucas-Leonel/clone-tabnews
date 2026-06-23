@@ -67,7 +67,7 @@ describe("Use case: Registration flow (All successful)", () => {
 
   test("Activate account", async () => {
     const activateResponse = await fetch(
-      `http://localhost:3000/api/v1/activation/${activationTokenId}`,
+      `http://localhost:3000/api/v1/activations/${activationTokenId}`,
       {
         method: "PATCH",
       },
@@ -83,7 +83,41 @@ describe("Use case: Registration flow (All successful)", () => {
     expect(activatedUser.features).toEqual(["create:session"]);
   });
 
-  test("Login", async () => {});
+  test("Login", async () => {
+    const createSessionResponse = await fetch(
+      "http://localhost:3000/api/v1/sessions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: "registration.flow@curso.dev",
+          password: "RegistrationFlowPassword",
+        }),
+      },
+    );
 
-  test("Get user information", async () => {});
+    expect(createSessionResponse.status).toBe(201);
+
+    const createSessionResponseBody = await createSessionResponse.json();
+
+    expect(createSessionResponseBody.user_id).toBe(createUserResponseBody.id);
+  });
+
+  test("Get user information", async () => {
+    const getUserResponse = await fetch(
+      `http://localhost:3000/api/v1/users/${createUserResponseBody.username}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    expect(getUserResponse.status).toBe(200);
+
+    const getUserResponseBody = await getUserResponse.json();
+  });
 });
