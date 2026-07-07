@@ -94,6 +94,11 @@ async function activateUser(inactiveUser) {
   return await activation.activateUserByUserId(inactiveUser.id);
 }
 
+async function addFeatureToUser(userObject, features) {
+  const updatedUser = await user.addFeatures(userObject.id, features);
+  return updatedUser;
+}
+
 const orquestrator = {
   waitForAllServices,
   clearDatabase,
@@ -104,5 +109,6 @@ const orquestrator = {
   getLastEmail,
   extractUUID,
   activateUser,
+  addFeatureToUser,
 };
 export default orquestrator;
