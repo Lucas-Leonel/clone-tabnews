@@ -115,7 +115,7 @@ describe("POST /api/v1/sessions", () => {
       expect(response.status).toBe(201);
 
       const responseBody = await response.json();
-
+      console.log("responseBody", responseBody);
       expect(responseBody).toEqual({
         created_at: responseBody.created_at,
         expires_at: responseBody.expires_at,
