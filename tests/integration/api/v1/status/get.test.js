@@ -12,24 +12,45 @@ describe("GET /api/v1/status", () => {
 
       // Teste validando que a data existe e está no formato ISO
       const responseBody = await response.json();
-      expect(responseBody.updated_at).toBeDefined();
 
       const parsedUpdateAt = new Date(responseBody.updated_at).toISOString();
       expect(responseBody.updated_at).toEqual(parsedUpdateAt);
 
-      //Validando versão do Postgres
-      const versionPostgres = responseBody.dependencies.version;
-      expect(versionPostgres).toEqual("16.0");
-      expect(versionPostgres).not.toBeNull();
+      expect(responseBody.dependencies.database.max_connections).toBeDefined();
+      expect(
+        responseBody.dependencies.database.opened_connections,
+      ).toBeDefined();
+      expect(responseBody.dependencies.database).not.toHaveProperty("version");
+    });
+  });
 
-      //Validando quantidade maxima de conexões ao banco
-      const maxconnections = responseBody.dependencies.max_connections;
-      expect(maxconnections).toEqual(100);
-      expect(maxconnections).not.toBeNull();
+  describe("Privileged user", () => {
+    test("With `read:status:all`", async () => {
+      const privilegedUser = await orchestrator.createUser();
+      const activatedUser = await orchestrator.activateUser(privilegedUser);
+      await orchestrator.addFeatureToUser(privilegedUser, ["read:status:all"]);
+      const privilegedSession = await orchestrator.createSession(
+        activatedUser.id,
+      );
 
-      //Valida conexão existente
-      expect(responseBody.dependencies.active_connections).toBeDefined();
-      expect(responseBody.dependencies.active_connections).toEqual(1);
+      const response = await fetch("http://localhost:3000/api/v1/status", {
+        method: "GET",
+        headers: {
+          Cookie: `session_id=${privilegedSession.token}`,
+        },
+      });
+
+      expect(response.status).toBe(200);
+
+      // Teste validando que a data existe e está no formato ISO
+      const responseBody = await response.json();
+
+      const parsedUpdateAt = new Date(responseBody.updated_at).toISOString();
+      expect(responseBody.updated_at).toEqual(parsedUpdateAt);
+
+      expect(responseBody.dependencies.database.version).toEqual("16.0");
+      expect(responseBody.dependencies.database.max_connections).toEqual(100);
+      expect(responseBody.dependencies.database.opened_connections).toEqual(1);
     });
   });
 });

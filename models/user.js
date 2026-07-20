@@ -11,9 +11,33 @@ async function create(userInputValues) {
   await validateUniqueUsername(userInputValues.username);
   await validateUniqueEmail(userInputValues.email);
   await hashPasswordInObject(userInputValues);
+  injectDefaultFeaturesInObject(userInputValues);
 
   const newUser = await runInsertQuery(userInputValues);
   return newUser;
+
+  async function runInsertQuery(userInputValues) {
+    const result = await database.query({
+      text: `
+    INSERT INTO
+      users (username, email, password, features)
+    VALUES 
+      ($1, $2, $3, $4)
+    RETURNING
+      *;`,
+      values: [
+        userInputValues.username,
+        userInputValues.email,
+        userInputValues.password,
+        userInputValues.features,
+      ],
+    });
+    return result.rows[0];
+  }
+
+  function injectDefaultFeaturesInObject(userInputValues) {
+    userInputValues.features = ["read:activation_token"];
+  }
 }
 
 async function findOneById(id) {
@@ -39,7 +63,7 @@ async function findOneById(id) {
     if (result.rowCount === 0) {
       throw new NotFoundError({
         message: "O id informado não foi encontrado no sistema.",
-        action: "Verifique se o id está digitando corretamente.",
+        action: "Verifique se o id está digitado corretamente.",
       });
     }
     return result.rows[0];
@@ -99,7 +123,7 @@ async function findOneByEmail(email) {
     if (result.rowCount === 0) {
       throw new NotFoundError({
         message: "O email informado não foi encontrado no sistema.",
-        action: "Verifique se o email está digitando corretamente.",
+        action: "Verifique se o email está digitado corretamente.",
       });
     }
     return result.rows[0];
@@ -206,27 +230,55 @@ async function update(username, userInputValues) {
   }
 }
 
-async function runInsertQuery(userInputValues) {
-  const result = await database.query({
-    text: `
-    INSERT INTO
-      users (username, email, password)
-    VALUES 
-      ($1, $2, $3)
-    RETURNING
-      *;`,
-    values: [
-      userInputValues.username,
-      userInputValues.email,
-      userInputValues.password,
-    ],
-  });
-  return result.rows[0];
-}
-
 async function hashPasswordInObject(userInputValues) {
   const hashePassword = await password.hash(userInputValues.password);
   userInputValues.password = hashePassword;
+}
+
+async function setFeatures(userId, features) {
+  const updatedUser = await runUpdateQuery(userId, features);
+  return updatedUser;
+
+  async function runUpdateQuery(userId, features) {
+    const result = await database.query({
+      text: `
+    UPDATE
+      users
+    SET
+      features = $2,
+      updated_at = timezone('utc', now())
+    WHERE
+      id = $1 
+    RETURNING
+      *
+    ;`,
+      values: [userId, features],
+    });
+    return result.rows[0];
+  }
+}
+
+async function addFeatures(userId, features) {
+  const updatedUser = await runUpdateQuery(userId, features);
+  return updatedUser;
+
+  async function runUpdateQuery(userId, features) {
+    const result = await database.query({
+      text: `
+    UPDATE
+      users
+    SET
+      features = array_cat(features, $2),
+      updated_at = timezone('utc', now())
+    WHERE
+      id = $1 
+    RETURNING
+      *
+    ;`,
+      values: [userId, features],
+    });
+    return result.rows[0];
+  }
 }
 
 const user = {
@@ -235,6 +287,8 @@ const user = {
   findOneByUsername,
   findOneByEmail,
   update,
+  setFeatures,
+  addFeatures,
 };
 
 export default user;

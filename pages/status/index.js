@@ -7,6 +7,22 @@ async function fetchAPI(key) {
   return responseBody;
 }
 
+export function normalizeStatusData(data) {
+  if (!data?.dependencies?.database) {
+    return {
+      dbVersion: "Carregando...",
+      maxConnections: "Carregando...",
+      activeConnections: "Carregando...",
+    };
+  }
+
+  return {
+    dbVersion: data.dependencies.database.version,
+    maxConnections: data.dependencies.database.max_connections,
+    activeConnections: data.dependencies.database.opened_connections,
+  };
+}
+
 function UpdatedAt() {
   const { isLoading, data } = useSWR("/api/v1/status", fetchAPI, {
     refreshInterval: 2000,
@@ -31,7 +47,6 @@ function DatabaseInfo() {
     refreshInterval: 2000,
   });
 
-  // Mantendo sua variável original "Database"
   let Database = {
     dbVersion: "Carregando...",
     maxConnections: "Carregando...",
@@ -39,10 +54,11 @@ function DatabaseInfo() {
   };
 
   if (!isLoading && data) {
+    const database = data.dependencies?.database;
     Database = {
-      dbVersion: data.dependencies.version,
-      maxConnections: data.dependencies.max_connections,
-      activeConnections: data.dependencies.active_connections,
+      dbVersion: database?.version ?? "Carregando...",
+      maxConnections: database?.max_connections ?? "Carregando...",
+      activeConnections: database?.opened_connections ?? "Carregando...",
     };
   }
 
