@@ -66,7 +66,7 @@ async function create(userId) {
 
 async function sendEmailToUser(user, activationToken) {
   await email.send({
-    from: "Fintab <contato@fintab.com.br>",
+    from: "Fintab <contato@lucas-leonel.dev.br>",
     to: user.email,
     subject: "Ative seu cadastro no Fintab!",
     text: `${user.username}, clique no link abaixo para ativar seu cadastro no Fintab:
