@@ -1,6 +1,7 @@
 import retry from "async-retry";
 import { faker } from "@faker-js/faker";
 import database from "infra/database.js";
+import webserver from "infra/webserver";
 import migrator from "models/migrator.js";
 import user from "models/user.js";
 import session from "models/session.js";
@@ -100,6 +101,7 @@ async function addFeatureToUser(userObject, features) {
 }
 
 const orquestrator = {
+  webserver,
   waitForAllServices,
   clearDatabase,
   runPendingMigrations,
